@@ -66,7 +66,7 @@
  *   while (lux_rx_encode_next(&enc, &tick)) { transmit(tick); }
  */
 
-#define LUX_RX_MAX_PAYLOAD 128
+#define LUX_RX_MAX_PAYLOAD 4096
 #define LUX_RX_BRIGHT_THRESHOLD 65440  // ADC value below this = bright
 #define LUX_RX_SAMPLES_PER_BIT 8       // samples per bit window at 64 Hz
 
@@ -82,7 +82,7 @@ typedef enum {
 typedef struct {
     // --- public (read after LUX_RX_DONE) ---
     char payload[LUX_RX_MAX_PAYLOAD + 1]; // null-terminated text
-    uint8_t payload_len;
+    uint16_t payload_len;
 
     // --- private ---
     uint8_t state;
@@ -95,7 +95,7 @@ typedef struct {
     uint8_t crc_accum;
     bool has_prev;
     bool saw_dark;     // must see a dark sample before a bright one can start a frame
-    uint16_t tick_count;
+    uint32_t tick_count;
 } lux_rx_t;
 
 void lux_rx_init(lux_rx_t *rx);
@@ -106,9 +106,9 @@ void lux_rx_reset(lux_rx_t *rx);
 
 typedef struct {
     const char *text;
-    uint8_t text_len;
+    uint16_t text_len;
     uint8_t crc;
-    uint16_t bit_index, total_bits;
+    uint32_t bit_index, total_bits;
 } lux_rx_encoder_t;
 
 void lux_rx_encode(lux_rx_encoder_t *enc, const char *text);

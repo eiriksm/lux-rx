@@ -81,10 +81,12 @@ uint8_t lux_rx_char_to_symbol(char c) {
     return char_to_sym[(uint8_t)c];
 }
 
-// Timeout covers max 128-char frame with margin.
+// Timeout covers the longest frame with margin.
 // At 64 Hz with 8 samples per bit and an 8 bits/s effective rate, the
-// longest frame is (6 + 128*6 + 6 + 6)*8 = 6288 samples (~98s).
-#define LUX_RX_TIMEOUT_TICKS 6400
+// longest frame is (6 + LUX_RX_MAX_PAYLOAD*6 + 6 + 6)*8 samples; for 4096
+// symbols that is 196752 samples (~51 min).
+#define LUX_RX_TIMEOUT_TICKS \
+    ((6UL + LUX_RX_MAX_PAYLOAD * 6UL + 6UL + 6UL) * LUX_RX_SAMPLES_PER_BIT + 128UL)
 
 // Bit is decoded as 1 when at least this many of the N samples are bright.
 // Ties (N/2) resolve to 1, which maximizes phase tolerance at START sync.
@@ -121,7 +123,9 @@ static void process_symbol(lux_rx_t *rx, uint8_t symbol) {
     } else if (symbol == LUX_RX_SYM_START) {
         rx->state = ST_ERROR;
     } else {
-        if (rx->payload_len >= LUX_RX_MAX_PAYLOAD) {
+        // The CRC is stored too until END removes it, using the slot that
+        // otherwise holds the terminator.
+        if (rx->payload_len > LUX_RX_MAX_PAYLOAD) {
             rx->state = ST_ERROR;
             return;
         }
@@ -220,13 +224,13 @@ void lux_rx_reset(lux_rx_t *rx) {
 // --- Encoder ---
 
 // Get the logical bit (pre-oversampling) at a given index in the frame.
-static uint8_t get_original_bit(lux_rx_encoder_t *enc, uint16_t idx) {
+static uint8_t get_original_bit(lux_rx_encoder_t *enc, uint32_t idx) {
     // START symbol (0b111111)
     if (idx < 6) return 1;
     idx -= 6;
 
     // Data symbols
-    uint16_t data_bits = (uint16_t)enc->text_len * 6;
+    uint32_t data_bits = (uint32_t)enc->text_len * 6;
     if (idx < data_bits) {
         uint16_t sym_index = idx / 6;
         uint8_t bit_pos = idx % 6;
@@ -267,15 +271,15 @@ void lux_rx_encode(lux_rx_encoder_t *enc, const char *text) {
 
     enc->bit_index = 0;
     // Each logical bit is held for LUX_RX_SAMPLES_PER_BIT samples (NRZ).
-    uint16_t orig_bits = 6 + (uint16_t)enc->text_len * 6 + 6 + 6;
+    uint32_t orig_bits = 6 + (uint32_t)enc->text_len * 6 + 6 + 6;
     enc->total_bits = orig_bits * LUX_RX_SAMPLES_PER_BIT;
 }
 
 bool lux_rx_encode_next(lux_rx_encoder_t *enc, uint8_t *out_bit) {
     if (enc->bit_index >= enc->total_bits) return false;
-    uint16_t i = enc->bit_index++;
+    uint32_t i = enc->bit_index++;
 
-    uint16_t orig_idx = i / LUX_RX_SAMPLES_PER_BIT;
+    uint32_t orig_idx = i / LUX_RX_SAMPLES_PER_BIT;
     // NRZ: every sample within the window carries the same level as the bit.
     *out_bit = get_original_bit(enc, orig_idx);
     return true;

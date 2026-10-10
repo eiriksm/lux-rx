@@ -84,8 +84,28 @@ void test_symbol_table(void) {
   TEST_ASSERT_EQUAL(0, lux_rx_char_to_symbol('$'));
 }
 
+void test_max_payload_round_trip(void) {
+  static char text[LUX_RX_MAX_PAYLOAD + 1];
+  lux_rx_t rx;
+  for (int i = 0; i < LUX_RX_MAX_PAYLOAD; i++) text[i] = 'a' + i % 26;
+  text[LUX_RX_MAX_PAYLOAD] = '\0';
+  TEST_ASSERT_EQUAL(LUX_RX_DONE, round_trip(&rx, text));
+  TEST_ASSERT_EQUAL(LUX_RX_MAX_PAYLOAD, rx.payload_len);
+  TEST_ASSERT_EQUAL_STRING(text, rx.payload);
+}
+
+void test_over_max_payload_is_error(void) {
+  static char text[LUX_RX_MAX_PAYLOAD + 2];
+  lux_rx_t rx;
+  for (int i = 0; i < LUX_RX_MAX_PAYLOAD + 1; i++) text[i] = 'a' + i % 26;
+  text[LUX_RX_MAX_PAYLOAD + 1] = '\0';
+  TEST_ASSERT_EQUAL(LUX_RX_ERROR, round_trip(&rx, text));
+}
+
 int main(void) {
   UNITY_BEGIN();
+  RUN_TEST(test_max_payload_round_trip);
+  RUN_TEST(test_over_max_payload_is_error);
   RUN_TEST(test_round_trip);
   RUN_TEST(test_round_trip_punctuation);
   RUN_TEST(test_uppercase_folds_to_lowercase);
