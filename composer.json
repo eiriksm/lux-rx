@@ -1,0 +1,5 @@
+{
+    "name": "eiriksm/lux-rx",
+    "description": "6-bit optical text receiver and encoder in C",
+    "license": "MIT"
+}
