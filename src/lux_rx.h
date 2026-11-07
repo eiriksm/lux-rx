@@ -69,7 +69,7 @@
 #define LUX_RX_MAX_PAYLOAD 4096
 #define LUX_RX_BRIGHT_THRESHOLD 65440  // ADC value below this = bright
 #define LUX_RX_SAMPLE_RATE_HZ 128      // rate lux_rx_feed() must be called at
-#define LUX_RX_SAMPLES_PER_BIT 8       // samples per bit window (128 Hz / 8 = 16 bits/s)
+#define LUX_RX_SAMPLES_PER_BIT 4       // samples per bit window (128 Hz / 4 = 32 bits/s)
 
 #define LUX_RX_SYM_END    0   // 0b000000
 #define LUX_RX_SYM_START  63  // 0b111111
