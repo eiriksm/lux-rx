@@ -82,9 +82,9 @@ uint8_t lux_rx_char_to_symbol(char c) {
 }
 
 // Timeout covers the longest frame with margin.
-// At 128 Hz with 4 samples per bit and a 32 bits/s effective rate, the
+// At 64 Hz with 4 samples per bit and a 16 bits/s effective rate, the
 // longest frame is (6 + LUX_RX_MAX_PAYLOAD*6 + 6 + 6)*4 samples; for 4096
-// symbols that is 98376 samples (~13 min).
+// symbols that is 98376 samples (~26 min).
 #define LUX_RX_TIMEOUT_TICKS \
     ((6UL + LUX_RX_MAX_PAYLOAD * 6UL + 6UL + 6UL) * LUX_RX_SAMPLES_PER_BIT + 128UL)
 

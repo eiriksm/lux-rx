@@ -5,7 +5,7 @@
 
 ## Description
 
-Decodes text sent as blinking light, sampled by a light sensor at 128 Hz. Each bit is NRZ with 4 samples per bit (32 bits/s), and each frame is `[START] [data symbols...] [CRC6] [END]` with a 62 character alphabet. See `src/lux_rx.h` for the details of the protocol.
+Decodes text sent as blinking light, sampled by a light sensor at 64 Hz. Each bit is NRZ with 4 samples per bit (16 bits/s), and each frame is `[START] [data symbols...] [CRC6] [END]` with a 62 character alphabet. See `src/lux_rx.h` for the details of the protocol.
 
 ## Usage
 
